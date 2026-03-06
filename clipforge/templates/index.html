@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>ClipForge — Turn YouTube Videos into Viral Clips</title>
+<meta name="description" content="Paste a YouTube link. AI finds the best moments. Download 30–60 viral-ready clips in phone format with subtitles."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#05060a;
+  --surface:#0c0d14;
+  --surface2:#12141f;
+  --surface3:#181b2a;
+  --border:rgba(255,255,255,0.07);
+  --border2:rgba(255,255,255,0.13);
+  --border3:rgba(255,255,255,0.22);
+  --accent:#ff4d6d;
+  --accent2:#ff8096;
+  --accent-glow:rgba(255,77,109,0.25);
+  --gold:#ffd166;
+  --gold-glow:rgba(255,209,102,0.2);
+  --green:#06d6a0;
+  --green-glow:rgba(6,214,160,0.15);
+  --blue:#74b9ff;
+  --text:#f0f2ff;
+  --text2:#9295b0;
+  --text3:#4a4d6a;
+}
+html,body{min-height:100%;font-family:'Instrument Sans',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+h1,h2,h3,.display{font-family:'Bricolage Grotesque',sans-serif}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--surface)}
+::-webkit-scrollbar-thumb{background:var(--text3);border-radius:99px}
+a{color:var(--accent2);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* ─── NOISE OVERLAY ─── */
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:1000;opacity:.4}
+
+/* ─── NAV ─── */
+nav{height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:200;background:rgba(5,6,10,0.92);backdrop-filter:blur(20px)}
+.brand{display:flex;align-items:center;gap:10px;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:1.05rem;letter-spacing:-.02em;cursor:pointer}
+.brand-mark{width:30px;height:30px;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center;box-shadow:0 0 16px var(--accent-glow)}
+.brand-mark svg{width:14px;height:14px}
+.nav-r{display:flex;align-items:center;gap:8px}
+
+/* ─── BUTTONS ─── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 18px;border-radius:9px;font-size:.81rem;font-weight:600;font-family:'Instrument Sans',sans-serif;cursor:pointer;border:none;transition:all .18s;letter-spacing:.01em;white-space:nowrap}
+.btn svg{width:14px;height:14px;flex-shrink:0}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid transparent}
+.btn-ghost:hover{background:var(--surface2);color:var(--text)}
+.btn-outline{background:transparent;color:var(--text);border:1px solid var(--border2)}
+.btn-outline:hover{border-color:var(--border3)}
+.btn-red{background:var(--accent);color:#fff;box-shadow:0 4px 20px var(--accent-glow)}
+.btn-red:hover{background:#ff6680;transform:translateY(-1px);box-shadow:0 6px 28px var(--accent-glow)}
+.btn-red:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-gold{background:var(--gold);color:#1a1000;font-weight:700;box-shadow:0 4px 20px var(--gold-glow)}
+.btn-gold:hover{background:#ffe080;transform:translateY(-1px)}
+.btn-green{background:var(--green);color:#002a20;font-weight:700;box-shadow:0 4px 18px var(--green-glow)}
+.btn-green:hover{background:#18e8b0}
+.btn-sm{padding:6px 13px;font-size:.74rem;border-radius:7px}
+.btn-xs{padding:5px 10px;font-size:.68rem;border-radius:6px}
+.btn-lg{padding:13px 26px;font-size:.88rem;border-radius:11px}
+
+/* ─── PAGES ─── */
+.page{display:none;min-height:calc(100vh - 60px)}
+.page.on{display:block}
+
+/* ═══════════════════════════════════════════
+   LANDING PAGE
+═══════════════════════════════════════════ */
+#pg-home{display:none}
+#pg-home.on{display:flex;flex-direction:column}
+
+/* Hero */
+.hero{display:grid;grid-template-columns:1fr 1fr;gap:0;min-height:calc(100vh - 60px)}
+.hero-left{padding:72px 56px;display:flex;flex-direction:column;justify-content:center;gap:32px;border-right:1px solid var(--border);position:relative;overflow:hidden}
+.hero-left::before{content:'';position:absolute;top:-120px;left:-80px;width:500px;height:500px;background:radial-gradient(ellipse,rgba(255,77,109,.08) 0%,transparent 65%);pointer-events:none}
+.eyebrow{display:flex;align-items:center;gap:8px;font-size:.72rem;font-weight:600;color:var(--accent);letter-spacing:.1em;text-transform:uppercase}
+.eyebrow-dot{width:5px;height:5px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent-glow)}
+h1{font-size:clamp(2.6rem,4vw,3.8rem);font-weight:800;letter-spacing:-.05em;line-height:1.02}
+h1 .hi{color:var(--accent)}
+.hero-desc{font-size:.95rem;color:var(--text2);line-height:1.7;max-width:420px}
+.hero-cta{display:flex;gap:10px;flex-wrap:wrap}
+.hero-stats{display:flex;gap:24px;padding-top:8px;border-top:1px solid var(--border)}
+.stat{display:flex;flex-direction:column;gap:3px}
+.stat-num{font-family:'Bricolage Grotesque',sans-serif;font-size:1.4rem;font-weight:700}
+.stat-lbl{font-size:.7rem;color:var(--text2);letter-spacing:.04em;text-transform:uppercase}
+
+/* Hero right — demo visual */
+.hero-right{padding:48px 40px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.hero-right::before{content:'';position:absolute;top:50%;right:-80px;transform:translateY(-50%);width:400px;height:400px;background:radial-gradient(ellipse,rgba(255,209,102,.05) 0%,transparent 65%);pointer-events:none}
+.phone-mockup{position:relative;width:220px;height:390px;border-radius:28px;background:var(--surface2);border:2px solid var(--border2);overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.04);flex-shrink:0}
+.phone-screen{position:absolute;inset:0;background:linear-gradient(160deg,#1a0a12 0%,#0a0510 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px}
+.phone-clips-preview{display:flex;flex-direction:column;gap:8px;width:100%}
+.phone-clip-row{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:10px;display:flex;align-items:center;gap:8px}
+.pcr-bar{width:28px;height:28px;border-radius:7px;background:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.pcr-bar svg{width:12px;height:12px;color:white}
+.pcr-info{flex:1;overflow:hidden}
+.pcr-title{font-size:.62rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
+.pcr-meta{font-size:.55rem;color:var(--text2);margin-top:2px}
+.pcr-score{font-size:.6rem;font-weight:700;color:var(--gold);background:rgba(255,209,102,.1);border:1px solid rgba(255,209,102,.2);border-radius:4px;padding:1px 5px}
+.phone-label{font-size:.6rem;color:var(--text2);letter-spacing:.05em;text-align:center}
+.phone-pulse{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:5px;background:rgba(6,214,160,.1);border:1px solid rgba(6,214,160,.25);border-radius:99px;padding:4px 10px;font-size:.58rem;font-weight:600;color:var(--green)}
+.phone-pulse::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--green);animation:blink 1.2s infinite}
+.floating-card{position:absolute;background:var(--surface2);border:1px solid var(--border2);border-radius:12px;padding:10px 14px;box-shadow:0 8px 32px rgba(0,0,0,.4);animation:float 4s ease-in-out infinite}
+.fc1{top:60px;right:30px;animation-delay:0s}
+.fc2{bottom:80px;left:20px;animation-delay:2s}
+.fc-label{font-size:.65rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.fc-val{font-family:'Bricolage Grotesque',sans-serif;font-size:1.1rem;font-weight:700}
+.fc-sub{font-size:.62rem;color:var(--text2);margin-top:1px}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+
+/* How it works section */
+.how{padding:72px 56px;border-top:1px solid var(--border)}
+.section-eyebrow{font-size:.72rem;font-weight:600;color:var(--text2);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px}
+.section-title{font-size:1.8rem;font-weight:700;letter-spacing:-.04em;margin-bottom:40px}
+.steps-row{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.how-step{display:flex;flex-direction:column;gap:12px;padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:14px;transition:border-color .2s}
+.how-step:hover{border-color:var(--border2)}
+.step-num{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:.9rem}
+.step-n1{background:rgba(255,77,109,.1);color:var(--accent);border:1px solid rgba(255,77,109,.2)}
+.step-n2{background:rgba(255,209,102,.1);color:var(--gold);border:1px solid rgba(255,209,102,.2)}
+.step-n3{background:rgba(116,185,255,.1);color:var(--blue);border:1px solid rgba(116,185,255,.2)}
+.step-n4{background:rgba(6,214,160,.1);color:var(--green);border:1px solid rgba(6,214,160,.2)}
+.step-title{font-family:'Bricolage Grotesque',sans-serif;font-size:.95rem;font-weight:700;letter-spacing:-.02em}
+.step-desc{font-size:.8rem;color:var(--text2);line-height:1.55}
+
+/* CTA bottom */
+.cta-bottom{padding:72px 56px;border-top:1px solid var(--border);display:flex;flex-direction:column;align-items:center;text-align:center;gap:20px;background:radial-gradient(ellipse at 50% 0%,rgba(255,77,109,.04) 0%,transparent 60%)}
+.cta-title{font-size:2rem;font-weight:800;letter-spacing:-.04em}
+
+/* ═══════════════════════════════════════════
+   APP PAGE
+═══════════════════════════════════════════ */
+#pg-app{display:none;background:var(--bg)}
+#pg-app.on{display:grid;grid-template-columns:380px 1fr;min-height:calc(100vh - 60px)}
+
+/* LEFT SIDEBAR */
+.sidebar{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:60px;height:calc(100vh - 60px);overflow-y:auto}
+.sidebar::-webkit-scrollbar{width:3px}
+.sidebar-inner{padding:24px;display:flex;flex-direction:column;gap:18px}
+
+/* sidebar header */
+.sb-header{display:flex;align-items:center;justify-content:space-between}
+.sb-title{font-family:'Bricolage Grotesque',sans-serif;font-size:.95rem;font-weight:700;letter-spacing:-.02em}
+.sb-step{display:flex;align-items:center;gap:5px;font-size:.7rem;color:var(--text2)}
+.sb-step-dot{width:5px;height:5px;border-radius:50%;background:var(--accent)}
+
+/* form elements */
+.field{display:flex;flex-direction:column;gap:6px}
+.label{font-size:.73rem;font-weight:600;color:var(--text2);letter-spacing:.04em;text-transform:uppercase;display:flex;align-items:center;gap:5px}
+.label svg{width:11px;height:11px;flex-shrink:0}
+.label-hint{margin-left:auto;font-size:.66rem;font-weight:400;color:var(--text3);text-transform:none;letter-spacing:0}
+
+/* URL input */
+.url-wrap{position:relative}
+.url-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:#ff4444;pointer-events:none;flex-shrink:0}
+.url-inp{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:11px 36px 11px 42px;color:var(--text);font-size:.86rem;font-family:'Instrument Sans',sans-serif;outline:none;transition:border-color .2s}
+.url-inp::placeholder{color:var(--text3)}
+.url-inp:focus{border-color:var(--accent)}
+.url-clear{position:absolute;right:11px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--text2);cursor:pointer;display:none}
+.url-clear:hover{color:var(--text)}
+
+/* video preview card */
+.vid-preview{display:none;background:var(--surface2);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.vid-prev-inner{display:flex;align-items:stretch}
+.vid-thumb{width:110px;flex-shrink:0;position:relative;overflow:hidden;background:var(--surface3)}
+.vid-thumb img{width:100%;height:100%;object-fit:cover}
+.vid-thumb-play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.15)}
+.vid-thumb-play svg{width:20px;height:20px;color:#fff}
+.vid-info{padding:10px 12px;flex:1;overflow:hidden;display:flex;flex-direction:column;justify-content:center;gap:4px}
+.vid-title{font-size:.8rem;font-weight:600;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.vid-ch{font-size:.7rem;color:var(--text2)}
+.vid-ready{display:inline-flex;align-items:center;gap:4px;font-size:.64rem;font-weight:600;color:var(--green);background:var(--green-glow);border:1px solid rgba(6,214,160,.2);border-radius:99px;padding:2px 7px;margin-top:3px;width:fit-content}
+.vid-ready::before{content:'';width:4px;height:4px;border-radius:50%;background:var(--green)}
+
+/* number input */
+.inp{background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:9px 12px;color:var(--text);font-size:.84rem;font-family:'Instrument Sans',sans-serif;outline:none;transition:border-color .2s;width:100%}
+.inp:focus{border-color:rgba(255,77,109,.5)}
+.inp-sel{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%234a4d6a' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px;cursor:pointer}
+
+/* two column grid */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+/* subtitle toggle */
+.sub-block{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.sub-top{display:flex;align-items:center;justify-content:space-between}
+.sub-left{display:flex;flex-direction:column;gap:2px}
+.sub-name{font-size:.82rem;font-weight:600;display:flex;align-items:center;gap:6px}
+.sub-name svg{width:13px;height:13px;color:var(--gold)}
+.sub-hint{font-size:.68rem;color:var(--text2)}
+.tog{width:38px;height:21px;background:var(--text3);border-radius:99px;position:relative;cursor:pointer;border:none;transition:background .2s;flex-shrink:0}
+.tog.on{background:var(--accent)}
+.tog::after{content:'';position:absolute;width:15px;height:15px;background:white;border-radius:50%;top:3px;left:3px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.tog.on::after{left:20px}
+.style-row{display:flex;gap:5px}
+.style-btn{padding:5px 11px;border-radius:6px;font-size:.71rem;font-weight:600;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text2);font-family:'Instrument Sans',sans-serif;transition:all .15s}
+.style-btn.on{background:var(--gold);color:#1a1000;border-color:var(--gold)}
+.style-btn:hover:not(.on){color:var(--text);border-color:var(--border2)}
+
+/* api key */
+.key-wrap{position:relative}
+.key-eye{position:absolute;right:11px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--text2);cursor:pointer}
+.key-eye:hover{color:var(--text)}
+
+/* server key notice */
+.server-key-note{display:none;align-items:center;gap:7px;background:rgba(6,214,160,.06);border:1px solid rgba(6,214,160,.2);border-radius:9px;padding:10px 13px;font-size:.76rem;color:var(--green)}
+.server-key-note svg{width:14px;height:14px;flex-shrink:0}
+.server-key-note.show{display:flex}
+
+/* error */
+.err-box{display:none;align-items:flex-start;gap:8px;background:rgba(255,77,109,.07);border:1px solid rgba(255,77,109,.2);border-radius:9px;padding:11px 13px;font-size:.78rem;color:#ff9090}
+.err-box.show{display:flex}
+.err-box svg{width:14px;height:14px;flex-shrink:0;margin-top:1px}
+
+/* submit button */
+.go-btn{width:100%;padding:13px;font-size:.88rem;border-radius:11px;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;letter-spacing:-.01em}
+
+/* divider */
+.divider{height:1px;background:var(--border)}
+
+/* tip block */
+.tip{display:flex;gap:8px;font-size:.74rem;color:var(--text2);line-height:1.55}
+.tip svg{width:13px;height:13px;color:var(--text3);flex-shrink:0;margin-top:1px}
+
+/* ─── MAIN CONTENT AREA ─── */
+.main{display:flex;flex-direction:column;min-height:calc(100vh - 60px);background:var(--bg)}
+
+/* EMPTY STATE */
+.empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:60px 40px;text-align:center}
+.empty-icon{width:72px;height:72px;border-radius:20px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center}
+.empty-icon svg{width:32px;height:32px;color:var(--text3)}
+.empty-title{font-family:'Bricolage Grotesque',sans-serif;font-size:1.2rem;font-weight:700;letter-spacing:-.03em}
+.empty-sub{font-size:.85rem;color:var(--text2);max-width:320px;line-height:1.6}
+.empty-arrow{display:flex;align-items:center;gap:6px;font-size:.8rem;color:var(--accent);font-weight:600}
+.empty-arrow svg{width:16px;height:16px;animation:arrowbounce 1.5s ease-in-out infinite}
+@keyframes arrowbounce{0%,100%{transform:translateX(0)}50%{transform:translateX(-6px)}}
+
+/* PROCESSING STATE */
+.proc-state{flex:1;display:none;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:60px 40px;text-align:center}
+.proc-state.on{display:flex}
+.spin-ring{position:relative;width:80px;height:80px;flex-shrink:0}
+.ring-a{position:absolute;inset:0;border-radius:50%;border:3px solid var(--border);border-top-color:var(--accent);animation:spin .85s linear infinite}
+.ring-b{position:absolute;inset:10px;border-radius:50%;border:2px solid transparent;border-top-color:var(--gold);animation:spin 1.3s linear infinite reverse}
+.ring-c{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.ring-c svg{width:28px;height:28px;color:var(--accent)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.proc-title{font-family:'Bricolage Grotesque',sans-serif;font-size:1.3rem;font-weight:800;letter-spacing:-.04em}
+.proc-msg{font-size:.84rem;color:var(--text2);min-height:20px}
+.prog-track{width:100%;max-width:380px;height:4px;background:var(--surface2);border-radius:99px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--gold));border-radius:99px;transition:width .5s ease;width:0%}
+.proc-steps{display:flex;flex-direction:column;gap:7px;width:100%;max-width:380px}
+.pstep{display:flex;align-items:center;gap:10px;padding:9px 13px;background:var(--surface);border:1px solid var(--border);border-radius:9px;font-size:.79rem;color:var(--text2);transition:all .25s;text-align:left}
+.pstep.run{color:var(--text);border-color:rgba(255,77,109,.3);background:rgba(255,77,109,.04)}
+.pstep.ok{color:var(--green);border-color:rgba(6,214,160,.2);background:var(--green-glow)}
+.pstep.fail{color:#ff8080;border-color:rgba(255,77,109,.2);background:rgba(255,77,109,.05)}
+.pdot{width:7px;height:7px;border-radius:50%;background:var(--text3);flex-shrink:0;transition:all .2s}
+.pstep.run .pdot{background:var(--accent);box-shadow:0 0 6px var(--accent-glow);animation:blink 1s infinite}
+.pstep.ok  .pdot{background:var(--green);box-shadow:none;animation:none}
+.pstep.fail .pdot{background:var(--accent);animation:none}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+.proc-count{font-size:.76rem;color:var(--text2)}
+.proc-count b{color:var(--gold)}
+
+/* RESULTS */
+.results-area{flex:1;display:none;flex-direction:column}
+.results-area.on{display:flex}
+.res-toolbar{padding:16px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:var(--surface);position:sticky;top:60px;z-index:100}
+.res-info{}
+.res-video-name{font-family:'Bricolage Grotesque',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:-.02em}
+.res-meta{font-size:.72rem;color:var(--text2);margin-top:2px}
+.res-right{display:flex;align-items:center;gap:8px}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:99px;font-size:.68rem;font-weight:700}
+.pill-green{background:var(--green-glow);color:var(--green);border:1px solid rgba(6,214,160,.2)}
+.pill-red{background:rgba(255,77,109,.1);color:var(--accent2);border:1px solid rgba(255,77,109,.2)}
+
+/* Filter bar */
+.filter-bar{padding:10px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px;flex-wrap:wrap;background:var(--bg)}
+.fchip{padding:4px 12px;border-radius:99px;font-size:.72rem;font-weight:600;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text2);font-family:'Instrument Sans',sans-serif;transition:all .15s}
+.fchip.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.fchip:hover:not(.on){color:var(--text);border-color:var(--border2)}
+.filter-sep{flex:1}
+.sort-label{font-size:.7rem;color:var(--text3)}
+
+/* clips grid */
+.clips-wrap{padding:20px 24px}
+.clips-count{font-size:.78rem;color:var(--text2);margin-bottom:14px}
+.clips-count b{color:var(--text)}
+.clips-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+
+/* clip card */
+.clip-card{background:var(--surface);border:1px solid var(--border);border-radius:13px;overflow:hidden;transition:all .2s;animation:cardUp .35s ease both;cursor:default}
+.clip-card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 10px 36px rgba(0,0,0,.4)}
+@keyframes cardUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+/* 9:16 phone aspect ratio */
+.clip-phone{position:relative;aspect-ratio:9/16;background:var(--surface3);overflow:hidden;max-height:190px}
+.clip-phone img{width:100%;height:100%;object-fit:cover}
+.clip-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.72) 0%,transparent 45%);display:flex;flex-direction:column;justify-content:space-between;padding:7px;pointer-events:none}
+.clip-score{align-self:flex-start;display:flex;align-items:center;gap:3px;background:var(--accent);border-radius:5px;padding:2px 6px;font-family:'Bricolage Grotesque',sans-serif;font-size:.63rem;font-weight:800;color:#fff}
+.clip-score svg{width:9px;height:9px}
+.clip-ts{align-self:flex-end;background:rgba(0,0,0,.72);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.13);border-radius:5px;padding:2px 6px;font-size:.63rem;font-weight:700;color:white}
+.clip-play-hover{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .18s;cursor:pointer}
+.clip-phone:hover .clip-play-hover{opacity:1}
+.play-ring{width:40px;height:40px;border-radius:50%;background:rgba(255,77,109,.85);display:flex;align-items:center;justify-content:center}
+.play-ring svg{width:16px;height:16px;color:#fff;margin-left:2px}
+.clip-body{padding:11px}
+.clip-title{font-family:'Bricolage Grotesque',sans-serif;font-size:.8rem;font-weight:700;line-height:1.3;letter-spacing:-.01em;margin-bottom:4px}
+.clip-hook{font-size:.7rem;color:var(--text2);line-height:1.4;font-style:italic;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:8px}
+.clip-tags{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px}
+.ctag{padding:1px 6px;border-radius:99px;font-size:.61rem;font-weight:700;border:1px solid;letter-spacing:.01em}
+.ctag.tiktok{color:#ff60a0;background:rgba(255,0,80,.07);border-color:rgba(255,0,80,.15)}
+.ctag.instagram{color:#c060ff;background:rgba(180,0,255,.07);border-color:rgba(180,0,255,.15)}
+.ctag.youtube{color:#ff6060;background:rgba(255,0,0,.07);border-color:rgba(255,0,0,.15)}
+.ctag.hook{color:var(--gold);background:rgba(255,209,102,.07);border-color:rgba(255,209,102,.15)}
+.ctag.emotional{color:#f072c8;background:rgba(240,80,190,.07);border-color:rgba(240,80,190,.15)}
+.ctag.funny{color:#facc15;background:rgba(250,204,21,.07);border-color:rgba(250,204,21,.15)}
+.ctag.educational{color:#38d9f5;background:rgba(56,217,245,.07);border-color:rgba(56,217,245,.15)}
+.ctag.controversial{color:#ff8080;background:rgba(255,80,80,.07);border-color:rgba(255,80,80,.15)}
+.ctag.surprising{color:var(--accent2);background:rgba(255,77,109,.07);border-color:rgba(255,77,109,.15)}
+.ctag.motivational{color:#7ec8ff;background:rgba(87,200,255,.07);border-color:rgba(87,200,255,.15)}
+.clip-meta{font-size:.68rem;color:var(--text2);display:flex;align-items:center;gap:5px;margin-bottom:10px;flex-wrap:wrap}
+.clip-meta svg{width:10px;height:10px;flex-shrink:0}
+.clip-actions{display:flex;gap:5px}
+.ca-dl{flex:1;display:flex;align-items:center;justify-content:center;gap:4px;padding:7px;border-radius:7px;font-size:.73rem;font-weight:700;font-family:'Instrument Sans',sans-serif;cursor:pointer;border:none;transition:all .15s}
+.ca-dl svg{width:12px;height:12px;flex-shrink:0}
+.ca-dl-main{background:var(--accent);color:#fff;box-shadow:0 2px 10px var(--accent-glow)}
+.ca-dl-main:hover{background:#ff6680}
+.ca-dl-main.saved{background:var(--green);box-shadow:0 2px 10px var(--green-glow)}
+.ca-dl-yt{background:var(--surface2);color:var(--text2);border:1px solid var(--border)!important;flex:0;padding:7px 9px}
+.ca-dl-yt:hover{color:var(--text);border-color:var(--border2)!important}
+.ca-dl-err{background:var(--surface2);color:#ff8080;border:1px solid rgba(255,80,80,.2)!important;cursor:default}
+
+/* DL all progress */
+.dla-bar{display:none;align-items:center;gap:6px;font-size:.73rem;color:var(--text2)}
+.dla-bar.on{display:flex}
+.dla-bar svg{width:12px;height:12px;color:var(--gold);animation:spin .7s linear infinite}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .hero{grid-template-columns:1fr}
+  .hero-right{display:none}
+  .steps-row{grid-template-columns:repeat(2,1fr)}
+  #pg-app{grid-template-columns:1fr;min-height:auto}
+  #pg-app.on{display:flex;flex-direction:column}
+  .sidebar{position:static;height:auto}
+  .clips-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
+  nav,.hero-left,.how,.cta-bottom{padding-left:20px;padding-right:20px}
+  .res-toolbar,.filter-bar,.clips-wrap{padding-left:16px;padding-right:16px}
+}
+@media(max-width:600px){
+  .steps-row{grid-template-columns:1fr}
+  .clips-grid{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ NAV ══ -->
+<nav>
+  <div class="brand" onclick="gotoLanding()">
+    <div class="brand-mark">
+      <svg viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    </div>
+    ClipForge
+  </div>
+  <div class="nav-r">
+    <button class="btn btn-ghost btn-sm" id="nav-how" onclick="scrollHow()">How it works</button>
+    <button class="btn btn-outline btn-sm" id="nav-try" onclick="gotoApp()">Try it free →</button>
+    <button class="btn btn-ghost btn-sm" id="nav-back" style="display:none" onclick="gotoLanding()">← Back</button>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════════════
+     LANDING PAGE
+══════════════════════════════════════════ -->
+<div class="page" id="pg-home">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-left">
+      <div>
+        <div class="eyebrow"><div class="eyebrow-dot"></div>AI Video Tool · Free to use</div>
+        <h1 style="margin-top:12px">Turn any YouTube<br/>video into <span class="hi">viral clips</span></h1>
+      </div>
+      <p class="hero-desc">Paste a URL — Claude AI finds the most viral moments, yt-dlp downloads it, ffmpeg trims it to <strong style="color:var(--text)">9:16 phone format</strong> with subtitles burned in. 30–60 ready-to-post clips in minutes.</p>
+      <div class="hero-cta">
+        <button class="btn btn-red btn-lg" onclick="gotoApp()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          Start clipping free
+        </button>
+        <button class="btn btn-outline btn-lg" onclick="scrollHow()">See how it works</button>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><div class="stat-num" style="color:var(--accent)">60</div><div class="stat-lbl">Clips per video</div></div>
+        <div class="stat"><div class="stat-num" style="color:var(--gold)">9:16</div><div class="stat-lbl">Phone format</div></div>
+        <div class="stat"><div class="stat-num" style="color:var(--green)">4</div><div class="stat-lbl">Subtitle styles</div></div>
+        <div class="stat"><div class="stat-num" style="color:var(--blue)">Free</div><div class="stat-lbl">To use</div></div>
+      </div>
+    </div>
+
+    <div class="hero-right">
+      <!-- Floating stat cards -->
+      <div class="floating-card fc1">
+        <div class="fc-label">Viral Score</div>
+        <div class="fc-val" style="color:var(--accent)">94 🔥</div>
+        <div class="fc-sub">AI selected moment</div>
+      </div>
+      <div class="floating-card fc2">
+        <div class="fc-label">Clips Generated</div>
+        <div class="fc-val" style="color:var(--green)">40</div>
+        <div class="fc-sub">ready to download</div>
+      </div>
+      <!-- Phone mockup -->
+      <div class="phone-mockup">
+        <div class="phone-screen">
+          <div class="phone-label">9:16 · Phone Ready</div>
+          <div class="phone-clips-preview">
+            <div class="phone-clip-row">
+              <div class="pcr-bar"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+              <div class="pcr-info">
+                <div class="pcr-title">This Changes Everything</div>
+                <div class="pcr-meta">0:48 – 1:22 · 34s</div>
+              </div>
+              <div class="pcr-score">97</div>
+            </div>
+            <div class="phone-clip-row">
+              <div class="pcr-bar" style="background:var(--gold)"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+              <div class="pcr-info">
+                <div class="pcr-title">Nobody Talks About This</div>
+                <div class="pcr-meta">3:15 – 4:10 · 55s</div>
+              </div>
+              <div class="pcr-score">93</div>
+            </div>
+            <div class="phone-clip-row">
+              <div class="pcr-bar" style="background:var(--green)"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+              <div class="pcr-info">
+                <div class="pcr-title">The Truth They Hide</div>
+                <div class="pcr-meta">7:02 – 7:48 · 46s</div>
+              </div>
+              <div class="pcr-score">91</div>
+            </div>
+          </div>
+          <div class="phone-pulse">● Processing clips…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- How it works -->
+  <div class="how" id="how-section">
+    <div class="section-eyebrow">Process</div>
+    <div class="section-title">How ClipForge works</div>
+    <div class="steps-row">
+      <div class="how-step">
+        <div class="step-num step-n1">01</div>
+        <div class="step-title">Paste any YouTube URL</div>
+        <div class="step-desc">Drop in any public YouTube video link. The longer the video, the more clips we can find — long-form content works best.</div>
+      </div>
+      <div class="how-step">
+        <div class="step-num step-n2">02</div>
+        <div class="step-title">AI finds viral moments</div>
+        <div class="step-desc">Claude AI analyzes your video's title and structure to identify the highest-potential moments: surprising reveals, emotional peaks, quotable lines, hot takes.</div>
+      </div>
+      <div class="how-step">
+        <div class="step-num step-n3">03</div>
+        <div class="step-title">yt-dlp downloads &amp; ffmpeg trims</div>
+        <div class="step-desc">yt-dlp fetches the full video, then ffmpeg centre-crops it to 9:16 phone format and trims each clip with optional subtitle overlay.</div>
+      </div>
+      <div class="how-step">
+        <div class="step-num step-n4">04</div>
+        <div class="step-title">Download &amp; post</div>
+        <div class="step-desc">All clips are MP4 files ready for TikTok, Instagram Reels, and YouTube Shorts. Download individually or grab them all at once.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-bottom">
+    <div class="cta-title">Ready to go viral?</div>
+    <p style="color:var(--text2);font-size:.9rem;max-width:380px;line-height:1.6">Bring your Anthropic API key and start generating clips for free. No account needed.</p>
+    <button class="btn btn-red btn-lg" onclick="gotoApp()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      Start clipping free →
+    </button>
+  </div>
+
+</div><!-- /pg-home -->
+
+<!-- ══════════════════════════════════════════
+     APP PAGE
+══════════════════════════════════════════ -->
+<div class="page" id="pg-app">
+
+  <!-- ── SIDEBAR ── -->
+  <div class="sidebar">
+    <div class="sidebar-inner">
+
+      <div class="sb-header">
+        <div class="sb-title">New clip job</div>
+        <div class="sb-step"><div class="sb-step-dot"></div> Configure</div>
+      </div>
+
+      <!-- URL -->
+      <div class="field">
+        <div class="label">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+          YouTube URL
+        </div>
+        <div class="url-wrap">
+          <svg class="url-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+          <input class="url-inp" id="yt-url" type="url" placeholder="youtube.com/watch?v=… or youtu.be/…" oninput="onUrl(this)"/>
+          <svg class="url-clear" id="url-clear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" onclick="clearUrl()"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </div>
+        <div class="vid-preview" id="vid-preview">
+          <div class="vid-prev-inner">
+            <div class="vid-thumb"><img id="vid-thumb" src="" alt=""/><div class="vid-thumb-play"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div>
+            <div class="vid-info">
+              <div class="vid-title" id="vid-title">Loading…</div>
+              <div class="vid-ch" id="vid-ch"></div>
+              <div class="vid-ready">Ready to clip</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Clip settings -->
+      <div class="field">
+        <div class="label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="15" rx="2"/><polyline points="17 2 12 7 7 2"/></svg>
+          Clips to Generate
+          <span class="label-hint">Max 60</span>
+        </div>
+        <input class="inp" id="f-num" type="number" min="5" max="60" value="40"/>
+      </div>
+
+      <div class="grid2">
+        <div class="field">
+          <div class="label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Min (s)
+          </div>
+          <input class="inp" id="f-min" type="number" min="10" max="90" value="30"/>
+        </div>
+        <div class="field">
+          <div class="label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Max (s)
+          </div>
+          <input class="inp" id="f-max" type="number" min="10" max="180" value="60"/>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Video Quality
+        </div>
+        <select class="inp inp-sel" id="f-quality">
+          <option value="1080">1080p — Best quality, slower</option>
+          <option value="720" selected>720p — Recommended</option>
+          <option value="480">480p — Fastest, smaller files</option>
+        </select>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Subtitles -->
+      <div class="sub-block">
+        <div class="sub-top">
+          <div class="sub-left">
+            <div class="sub-name">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              Burn Subtitles
+            </div>
+            <div class="sub-hint">AI captions embedded into the video</div>
+          </div>
+          <button class="tog on" id="sub-tog" onclick="toggleSub(this)"></button>
+        </div>
+        <div class="style-row" id="style-row">
+          <button class="style-btn on" data-s="white"  onclick="pickStyle(this)">White</button>
+          <button class="style-btn"    data-s="yellow" onclick="pickStyle(this)">Yellow</button>
+          <button class="style-btn"    data-s="neon"   onclick="pickStyle(this)">Neon</button>
+          <button class="style-btn"    data-s="bold"   onclick="pickStyle(this)">Bold</button>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- API Key -->
+      <div class="field">
+        <div class="label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Anthropic API Key
+        </div>
+        <div class="server-key-note" id="server-key-note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+          API key pre-configured — you're good to go!
+        </div>
+        <div id="api-key-field">
+          <div class="key-wrap">
+            <input class="inp" id="f-key" type="password" placeholder="sk-ant-api03-…" oninput="checkReady()" style="padding-right:36px"/>
+            <svg class="key-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" onclick="toggleEye()"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </div>
+          <div style="font-size:.68rem;color:var(--text3);margin-top:5px">
+            Get yours free at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> · Never stored
+          </div>
+        </div>
+      </div>
+
+      <div class="err-box" id="home-err">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span id="home-err-txt"></span>
+      </div>
+
+      <button class="btn btn-red go-btn" id="go-btn" onclick="startJob()" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        Generate Clips
+      </button>
+
+      <div class="tip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Long-form videos (30 min+) produce the most viral clips. Processing time depends on video length and your internet speed.
+      </div>
+
+    </div>
+  </div><!-- /sidebar -->
+
+  <!-- ── MAIN ── -->
+  <div class="main">
+
+    <!-- Empty state -->
+    <div class="empty-state" id="empty-state">
+      <div class="empty-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      </div>
+      <div class="empty-title">Your clips will appear here</div>
+      <div class="empty-sub">Paste a YouTube URL on the left, configure your settings, and hit <strong style="color:var(--accent)">Generate Clips</strong>.</div>
+      <div class="empty-arrow">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        Configure on the left to start
+      </div>
+    </div>
+
+    <!-- Processing state -->
+    <div class="proc-state" id="proc-state">
+      <div class="spin-ring">
+        <div class="ring-a"></div>
+        <div class="ring-b"></div>
+        <div class="ring-c"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+      </div>
+      <div>
+        <div class="proc-title">Generating your clips…</div>
+        <div class="proc-msg" id="proc-msg">Starting up…</div>
+      </div>
+      <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+      <div class="proc-steps">
+        <div class="pstep" id="ps-dl"><div class="pdot"></div>Downloading with yt-dlp</div>
+        <div class="pstep" id="ps-ai"><div class="pdot"></div>Claude AI analyzing viral moments</div>
+        <div class="pstep" id="ps-cl"><div class="pdot"></div>ffmpeg trimming clips to 9:16</div>
+        <div class="pstep" id="ps-ok"><div class="pdot"></div>Finalizing &amp; packaging</div>
+      </div>
+      <div class="proc-count" id="proc-count"></div>
+      <button class="btn btn-outline btn-sm" onclick="cancelJob()" style="margin-top:4px">Cancel</button>
+    </div>
+
+    <!-- Results -->
+    <div class="results-area" id="results-area">
+      <div class="res-toolbar">
+        <div class="res-info">
+          <div class="res-video-name" id="res-name">–</div>
+          <div class="res-meta" id="res-meta">–</div>
+        </div>
+        <div class="res-right">
+          <div class="dla-bar" id="dla-bar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            <span id="dla-txt">0/0</span>
+          </div>
+          <span class="pill pill-green" id="res-pill">● 0 clips</span>
+          <button class="btn btn-gold btn-sm" id="dla-btn" onclick="dlAll()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download All
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="startNew()">+ New job</button>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <button class="fchip on" onclick="setFilter('all',this)">All</button>
+        <button class="fchip" onclick="setFilter('tiktok',this)">TikTok</button>
+        <button class="fchip" onclick="setFilter('instagram',this)">Instagram</button>
+        <button class="fchip" onclick="setFilter('hook',this)">Hook</button>
+        <button class="fchip" onclick="setFilter('emotional',this)">Emotional</button>
+        <button class="fchip" onclick="setFilter('funny',this)">Funny</button>
+        <button class="fchip" onclick="setFilter('educational',this)">Educational</button>
+        <button class="fchip" onclick="setFilter('surprising',this)">Surprising</button>
+        <button class="fchip" onclick="setFilter('controversial',this)">Controversial</button>
+        <div class="filter-sep"></div>
+        <span class="sort-label">Sort:</span>
+        <button class="btn btn-ghost btn-xs" onclick="sortClips('viral')">Viral score</button>
+        <button class="btn btn-ghost btn-xs" onclick="sortClips('time')">Chronological</button>
+      </div>
+
+      <div class="clips-wrap">
+        <div class="clips-count" id="clips-count"></div>
+        <div class="clips-grid" id="clips-grid"></div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /pg-app -->
+
+<!-- ══════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════ -->
+<script>
+/* ─── State ─── */
+let jobId = null, pollTimer = null;
+let allClips = [], curFilter = 'all';
+let ytId = '', ytTitle = '';
+let subsOn = true, subStyle = 'white';
+let hasServerKey = false;
+
+/* ─── Init ─── */
+window.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const r = await fetch('/api/server-key');
+    const d = await r.json();
+    hasServerKey = d.hasKey;
+    if (hasServerKey) {
+      document.getElementById('server-key-note').classList.add('show');
+      document.getElementById('api-key-field').style.display = 'none';
+    }
+  } catch {}
+  checkReady();
+  // Show landing by default
+  showPage('home');
+});
+
+/* ─── Pages ─── */
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
+  document.getElementById('pg-' + name).classList.add('on');
+  const onApp = name === 'app';
+  document.getElementById('nav-try').style.display   = onApp ? 'none' : '';
+  document.getElementById('nav-how').style.display   = onApp ? 'none' : '';
+  document.getElementById('nav-back').style.display  = onApp ? '' : 'none';
+}
+
+function gotoLanding() { showPage('home'); }
+function gotoApp()     { showPage('app'); setMain('empty'); }
+function scrollHow()   { gotoLanding(); setTimeout(() => document.getElementById('how-section')?.scrollIntoView({behavior:'smooth'}), 100); }
+function startNew()    { setMain('empty'); }
+function cancelJob()   { clearInterval(pollTimer); setMain('empty'); }
+
+function setMain(mode) {
+  document.getElementById('empty-state').style.display  = mode==='empty'   ? 'flex'   : 'none';
+  document.getElementById('proc-state').classList.toggle('on',  mode==='proc');
+  document.getElementById('results-area').classList.toggle('on', mode==='results');
+}
+
+/* ─── URL ─── */
+async function onUrl(inp) {
+  const v = inp.value.trim();
+  document.getElementById('url-clear').style.display = v ? 'block' : 'none';
+  const m = v.match(/(?:v=|youtu\.be\/|shorts\/|embed\/)([A-Za-z0-9_-]{11})/);
+  if (m) {
+    ytId = m[1];
+    document.getElementById('vid-thumb').src = `https://img.youtube.com/vi/${ytId}/mqdefault.jpg`;
+    document.getElementById('vid-title').textContent = 'Loading…';
+    document.getElementById('vid-ch').textContent = '';
+    document.getElementById('vid-preview').style.display = 'block';
+    checkReady();
+    try {
+      const r = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(v)}&format=json`);
+      if (r.ok) {
+        const d = await r.json();
+        ytTitle = d.title || 'Video';
+        document.getElementById('vid-title').textContent = ytTitle;
+        document.getElementById('vid-ch').textContent = `by ${d.author_name || 'YouTube'}`;
+      } else { document.getElementById('vid-title').textContent = 'YouTube Video'; }
+    } catch { document.getElementById('vid-title').textContent = 'YouTube Video'; }
+  } else {
+    ytId = '';
+    document.getElementById('vid-preview').style.display = 'none';
+    checkReady();
+  }
+}
+
+function clearUrl() {
+  document.getElementById('yt-url').value = '';
+  document.getElementById('url-clear').style.display = 'none';
+  document.getElementById('vid-preview').style.display = 'none';
+  ytId = ''; checkReady();
+}
+
+/* ─── Settings ─── */
+function checkReady() {
+  const key = hasServerKey || document.getElementById('f-key')?.value.trim().startsWith('sk-ant');
+  document.getElementById('go-btn').disabled = !(ytId && key);
+}
+
+function toggleSub(btn) {
+  btn.classList.toggle('on');
+  subsOn = btn.classList.contains('on');
+  document.getElementById('style-row').style.opacity = subsOn ? '1' : '.35';
+}
+
+function pickStyle(btn) {
+  document.querySelectorAll('.style-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on'); subStyle = btn.dataset.s;
+}
+
+function toggleEye() {
+  const el = document.getElementById('f-key');
+  el.type = el.type === 'password' ? 'text' : 'password';
+}
+
+/* ─── Start job ─── */
+async function startJob() {
+  const url = document.getElementById('yt-url').value.trim();
+  const key = document.getElementById('f-key')?.value.trim() || '';
+  const num = parseInt(document.getElementById('f-num').value) || 40;
+  const cmin = parseInt(document.getElementById('f-min').value) || 30;
+  const cmax = parseInt(document.getElementById('f-max').value) || 60;
+  const q = document.getElementById('f-quality').value;
+
+  document.getElementById('home-err').classList.remove('show');
+  setMain('proc');
+  resetSteps();
+
+  try {
+    const r = await fetch('/api/start', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ url, apiKey: key, numClips: num,
+        clipMin: cmin, clipMax: cmax, quality: q,
+        addSubtitles: subsOn, subtitleStyle: subStyle })
+    });
+    const d = await r.json();
+    if (d.error) throw new Error(d.error);
+    jobId = d.jobId; allClips = [];
+    pollTimer = setInterval(doPoll, 1100);
+  } catch(e) {
+    document.getElementById('home-err-txt').textContent = e.message;
+    document.getElementById('home-err').classList.add('show');
+    setMain('empty');
+  }
+}
+
+/* ─── Polling ─── */
+const STEPS = ['download','analyze','clips','done'];
+const SELS  = {download:'ps-dl',analyze:'ps-ai',clips:'ps-cl',done:'ps-ok'};
+
+function resetSteps() {
+  Object.values(SELS).forEach(id => { const el=document.getElementById(id); if(el) el.className='pstep'; });
+  document.getElementById('prog-fill').style.width = '0%';
+  document.getElementById('proc-count').textContent = '';
+  document.getElementById('proc-state').querySelector('.err-box')?.remove();
+}
+
+function syncSteps(step, pct) {
+  const ci = STEPS.indexOf(step);
+  STEPS.forEach((s,i) => {
+    const el = document.getElementById(SELS[s]); if(!el) return;
+    el.className = i < ci ? 'pstep ok' : i === ci ? 'pstep run' : 'pstep';
+  });
+  document.getElementById('prog-fill').style.width = pct + '%';
+}
+
+async function doPoll() {
+  if (!jobId) return;
+  try {
+    const r = await fetch(`/api/status/${jobId}`);
+    const j = await r.json();
+    document.getElementById('proc-msg').textContent = j.message || '…';
+    syncSteps(j.step || 'download', j.progress || 0);
+    if (j.clips?.length) {
+      const done = j.clips.filter(c=>c.status==='done').length;
+      document.getElementById('proc-count').innerHTML = `<b>${done}</b> / ${j.totalClips||j.clips.length} clips processed`;
+    }
+    if (j.status === 'done') {
+      clearInterval(pollTimer);
+      syncSteps('done',100);
+      allClips = j.clips || [];
+      setTimeout(() => showResults(j), 700);
+    }
+    if (j.status === 'error') {
+      clearInterval(pollTimer);
+      document.getElementById('ps-dl').className = 'pstep fail';
+      // show inline error
+      const box = Object.assign(document.createElement('div'),{className:'err-box show',innerHTML:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>${j.error||'Unknown error'}</span>`});
+      document.getElementById('proc-state').appendChild(box);
+    }
+  } catch(e) { console.error(e); }
+}
+
+/* ─── Results ─── */
+function showResults(job) {
+  const ok = allClips.filter(c=>c.status==='done').length;
+  document.getElementById('res-name').textContent = job.title || ytTitle || 'Video';
+  document.getElementById('res-meta').textContent = `${ok} clips ready · ${allClips.filter(c=>c.status==='error').length} failed`;
+  document.getElementById('res-pill').textContent = `● ${ok} clips ready`;
+  setMain('results');
+  drawClips(getFiltered());
+}
+
+function getFiltered() {
+  let list = allClips.filter(c=>c.status==='done');
+  if (curFilter!=='all') list = list.filter(c=>(c.tags||[]).includes(curFilter)||c.category===curFilter);
+  return list;
+}
+
+function setFilter(f,btn) {
+  curFilter=f;
+  document.querySelectorAll('.fchip').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  drawClips(getFiltered());
+}
+
+function sortClips(mode) {
+  let list = getFiltered();
+  if (mode==='viral') list.sort((a,b)=>(b.viralScore||0)-(a.viralScore||0));
+  if (mode==='time')  list.sort((a,b)=>ts2s(a.startTime)-ts2s(b.startTime));
+  drawClips(list);
+}
+
+function drawClips(clips) {
+  const grid = document.getElementById('clips-grid');
+  grid.innerHTML='';
+  document.getElementById('clips-count').innerHTML =
+    `Showing <b>${clips.length}</b> clips`;
+
+  if (!clips.length) {
+    grid.innerHTML=`<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--text2);font-size:.85rem">No clips match this filter.</div>`;
+    return;
+  }
+
+  const thumb = ytId ? `https://img.youtube.com/vi/${ytId}/mqdefault.jpg` : '';
+  clips.forEach((c,i) => {
+    const el = document.createElement('div');
+    el.className = 'clip-card'; el.id = `cc-${c.index}`;
+    el.style.animationDelay = (i*.04)+'s';
+    const tags = (c.tags||[]).map(t=>`<span class="ctag ${t}">${t}</span>`).join('');
+    const dur  = c.durationSecs||(ts2s(c.endTime)-ts2s(c.startTime));
+    el.innerHTML=`
+      <div class="clip-phone" onclick="openYT(${c.index})">
+        <img src="${thumb}" alt="" loading="lazy"/>
+        <div class="clip-overlay">
+          <div class="clip-score"><svg viewBox="0 0 24 24" fill="currentColor" width="9" height="9"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>${c.viralScore||80}</div>
+          <div class="clip-ts">${c.startTime}–${c.endTime}</div>
+        </div>
+        <div class="clip-play-hover"><div class="play-ring"><svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div>
+      </div>
+      <div class="clip-body">
+        <div class="clip-title">#${c.index} ${esc(c.title||'Clip')}</div>
+        <div class="clip-hook">"${esc(c.hook||'')}"</div>
+        <div class="clip-tags">${tags}</div>
+        <div class="clip-meta">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          ${dur}s${c.sizeMb?' · '+c.sizeMb+' MB':''}
+        </div>
+        <div class="clip-actions">
+          <button class="ca-dl ca-dl-main" id="dl-${c.index}" onclick="dlClip(${c.index},this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download
+          </button>
+          <button class="ca-dl ca-dl-yt" onclick="openYT(${c.index})" title="Open in YouTube">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+          </button>
+        </div>
+      </div>`;
+    grid.appendChild(el);
+  });
+}
+
+/* ─── Download ─── */
+function dlClip(idx, btn) {
+  const c = allClips.find(x=>x.index===idx); if(!c?.url) return;
+  btn.style.pointerEvents='none';
+  btn.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" style="animation:spin .7s linear infinite"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Saving…`;
+  const a=Object.assign(document.createElement('a'),{href:c.url,download:c.filename||`clip_${idx}.mp4`});
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(()=>{
+    btn.classList.add('saved');
+    btn.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><polyline points="20 6 9 17 4 12"/></svg>Saved!`;
+    btn.style.pointerEvents='';
+  },1400);
+}
+
+async function dlAll() {
+  const ready = allClips.filter(c=>c.status==='done'&&c.url);
+  if (!ready.length) return;
+  document.getElementById('dla-btn').style.display='none';
+  const bar=document.getElementById('dla-bar');
+  const txt=document.getElementById('dla-txt');
+  bar.classList.add('on');
+  for(let i=0;i<ready.length;i++) {
+    txt.textContent=`${i+1}/${ready.length}`;
+    const a=Object.assign(document.createElement('a'),{href:ready[i].url,download:ready[i].filename||`clip_${i+1}.mp4`});
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    await new Promise(r=>setTimeout(r,700));
+  }
+  bar.classList.remove('on');
+  document.getElementById('dla-btn').style.display='';
+  document.getElementById('dla-btn').textContent='✓ All saved!';
+}
+
+/* ─── Utils ─── */
+function openYT(idx) {
+  const c=allClips.find(x=>x.index==idx);
+  if(!c||!ytId) return;
+  window.open(`https://www.youtube.com/watch?v=${ytId}&t=${Math.floor(ts2s(c.startTime))}s`,'_blank');
+}
+
+function ts2s(ts) {
+  if(!ts) return 0;
+  const p=String(ts).split(':').map(Number);
+  if(p.length===3) return p[0]*3600+p[1]*60+p[2];
+  if(p.length===2) return p[0]*60+p[1];
+  return parseFloat(ts)||0;
+}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+</script>
+</body>
+</html>
